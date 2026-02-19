@@ -7,6 +7,14 @@ Flipper 12 est un projet dans une démarche de révolutionner le jeu de flipper,
 
 ---
 
+## Problématique
+
+Les jeux d'arcade modernes sont peu compétitifs, rarement connectés à la blockchain, et ne permettent pas une redistribution automatique et transparente des gains. Le flipper reste un jeu nostalgique mais non intégré aux nouvelles pratiques Play2Earn et Web3.
+
+Flipper 12 vise à combiner arcade physique et compétition crypto-native avec transparence, automatisation et anonymat.
+
+---
+
 ## Objectifs 
 
 - Simulation d'un flipper complet avec une physique le plus proche du réel
@@ -1032,5 +1040,237 @@ Idir, 25 ans, Degen - Viens jouer toutes les semaines dans le tournoi hebdomadai
 - Les frais de plateforme (2%) sont prélevés avant redistribution
 - En cas d'erreur technique, les fonds restent en escrow et sont récupérables manuellement
 - Historique complet des redistributions consultable on-chain
+
+---
+
+## Architecture technique
+
+### Vue d'ensemble
+
+Le système Flipper 12 est composé de plusieurs modules interconnectés fonctionnant sur une borne physique dédiée.
+
+```
+
+BORNE FLIPPER 12                         
+
+
+ MOTEUR DE JEU (Three.js)             
+  ─ Physique (Moteur physique temps réel)         
+  ─ Gestion score (Calcul & affichage)           
+  ─ UI (Interface utilisateur)                      
+  ─ Audio (Effets sonores)                          
+
+ MODULE BLOCKCHAIN                           
+ ─ RPC Solana (web3.js / @solana/web3.js)   
+ ─ Smart contracts (Anchor)                         
+ ─ Gestion transactions  
+                            
+
+ BASE DE DONNÉES LOCALE                       
+ ─ Scores locaux (PostgreSQL) 
+ ─ Sauvegardes parties (JSON)                      
+ ─ Configuration borne                              
+ ─ Cache leaderboard                               
+
+ HARDWARE INTERFACE                               
+ ─ Boutons raquettes (GPIO)                        
+ ─ Écran tactile                                                                
+
+        │
+        │ HTTPS / RPC Solana
+        ▼
+       
+  BLOCKCHAIN SOLANA 
+   ─ Smart contracts
+   ─ Leaderboard    
+   ─ Tournois       
+                    
+```
+
+### Communication
+
+- **Internet → Blockchain** : HTTPS via RPC Solana (endpoints publics ou dédiés)
+- **Borne → Wallet mobile** : QR code (WebSocket)
+- **Stockage local** : PostgreSQL pour données structurées, fichiers JSON pour sauvegardes
+- **Hardware** : USB pour écran tactile
+
+### Système d'exploitation
+
+- **OS recommandé** : Linux (Ubuntu LTS) ou Windows IoT
+- **Gestion des processus** : Service système pour auto-démarrage
+- **Mise à jour** : OTA (Over-The-Air) pour mises à jour logicielles
+
+---
+
+## Stack technique
+
+| Composant | Technologie | Justification |
+|-----------|-------------|---------------|----------------------|
+| **Moteur de jeu** | Three.js|
+| **Blockchain** | Solana | Frais de transaction très faibles (~0.00025 SOL)|
+| **Smart contracts** | Anchor (Rust) | Framework standard Solana, sécurité, développement rapide |
+| **Backend RPC** | Node.js + @solana/web3.js | API RPC native, gestion asynchrone, écosystème riche | 
+| **Stockage local** | PostgreSQL |
+| **Sauvegardes** | JSON files | Format simple, lisible, facile à déboguer |
+| **OS** | Linux (Ubuntu LTS) | Stable, open-source, support long terme | Windows IoT (licence)|
+| **Langage principal** | JavaScript |
+| **Gestion de version** | Git + GitHub | Standard industrie, collaboration, CI/CD |
+
+### Dépendances principales
+
+- **Solana Web3.js** : Version 1.87+
+- **Anchor** : Version 0.29+
+- **SQLite** : Version 3.40+
+
+---
+
+## Risques & contraintes
+
+### Risques techniques
+
+| Risque | Probabilité | Impact | Mitigation |
+|--------|-------------|--------|------------|
+| **Frais Solana variables** | Moyenne | Moyen | Simulation avant transaction + buffer de 20% sur frais estimés |
+| **Latence réseau** | Haute | Fort | Mode offline avec queue de transactions, cache local des données |
+| **Fail smart contract** | Faible | Critique | Audit de sécurité avant déploiement, tests exhaustifs, mécanisme de rollback |
+| **Panne hardware** | Moyenne | Fort | Auto-diagnostics, logs détaillés, mode maintenance accessible |
+| **Coupure électrique** | Faible | Moyen | Sauvegarde automatique toutes les 10s, UPS recommandé pour bornes critiques |
+| **QR code expiré** | Moyenne | Faible | Régénération automatique après 2 minutes, notification visuelle |
+| **Transaction rejetée** | Moyenne | Moyen | Retry automatique 3 fois avec backoff exponentiel, message clair à l'utilisateur |
+| **Surcharge réseau Solana** | Faible | Fort | Utilisation de RPC multiples (fallback), priorisation des transactions critiques |
+| **Manipulation des scores** | Faible | Critique | Validation côté smart contract, signature cryptographique, anti-replay |
+
+### Contraintes
+
+- **Pas de jeu en ligne** : Toutes les parties se jouent localement sur la borne physique
+- **Borne physique uniquement** : Pas de version web ou mobile standalone
+- **Solana uniquement** : Pas de support multi-chain dans la v1
+- **Connexion Internet requise** : Pour fonctionnalités blockchain (tournois, leaderboard)
+- **Wallet mobile requis** : Pas de wallet intégré dans la borne (sécurité)
+- **Limite de participants** : Maximum 20 participants par tournoi local, illimité pour tournois on-chain
+
+---
+
+## Sécurité
+
+### Validation des scores
+
+- **Vérification côté client** : Score calculé en temps réel avec logs détaillés
+- **Validation on-chain** : Smart contract vérifie la cohérence du score (plage raisonnable, pas de valeurs négatives)
+- **Signature cryptographique** : Chaque score est signé par la clé privée du wallet (non accessible depuis la borne)
+- **Anti-replay** : Timestamp + nonce unique pour chaque transaction
+- **Plafonds** : Score maximum théorique calculé selon durée de partie et règles
+
+### Anti-manipulation physique
+
+- **Système anti-tilt** : 
+  - Capteurs accéléromètre détectant secousses excessives
+  - Pénalité automatique : -500 points + perte de bille immédiate
+  - Détection après 3 secousses rapides consécutives
+- **Validation des capteurs** : Auto-test au démarrage, détection de capteurs défaillants
+- **Logs hardware** : Enregistrement de tous les événements capteurs pour audit
+
+### Gestion des erreurs RPC
+
+- **Retry automatique** : 3 tentatives avec backoff exponentiel (1s, 2s, 4s)
+- **Fallback RPC** : Liste de 3+ endpoints RPC, bascule automatique en cas d'échec
+- **Mode dégradé** : En cas de panne réseau prolongée, fonctionnalités locales restent actives
+
+### Audit et logs
+
+- **Logs complets** : Enregistrement de toutes les actions critiques (connexions, transactions, erreurs)
+- **Anonymisation** : Adresses wallet anonymisées dans les logs (XXX...XXX)
+- **Rétention** : Logs conservés 90 jours localement, archivage optionnel
+- **Alertes** : Notification automatique en cas d'anomalie détectée (tentative de triche, erreur critique)
+
+---
+
+
+
+## Conventions équipe
+
+### Nommage
+
+- **Variables** : camelCase (`playerAddress`, `currentScore`)
+- **Constantes** : UPPER_SNAKE_CASE (`MAX_BALLS`, `DEFAULT_ENTRY_FEE`)
+- **Classes** : PascalCase (`GameSession`, `TournamentManager`)
+- **Fichiers** : PascalCase pour classes (`Player.cs`), kebab-case pour configs (`game-config.json`)
+- **Smart contracts** : snake_case (`tournament_manager.rs`)
+
+### Git
+
+- **Branches** : `feature/`, `fix/`, `hotfix/`, `refactor/`
+- **Commits** : Format conventionnel
+  - `feat: ajout système anti-tilt`
+  - `fix: correction calcul score on-chain`
+  - `docs: mise à jour CDC`
+  - `refactor: optimisation requêtes RPC`
+- **Pull requests** : Description détaillée, review obligatoire avant merge
+
+### Code
+
+- **Commentaires** : En Anglais pour la logique métier, en anglais pour les APIs externes
+- **Documentation** : JSDoc/XML comments pour toutes les fonctions publiques
+- **Tests** :
+- **Linting** : ESLint pour JS/TS, StyleCop pour C#
+
+### Déploiement
+
+- **Environnements** : dev → testnet → mainnet
+- **CI/CD** : Tests automatiques sur chaque PR, déploiement testnet automatique
+- **Rollback** : Plan de rollback documenté pour chaque déploiement
+
+
+---
+
+## Questions ouvertes
+
+### Techniques
+
+1. **Moteur de jeu** : Allons nous uitliser Three.js ? 
+   - *Décision attendue* : Évaluer performance et complexité physique requise
+   - *Impact* : Architecture technique et stack
+
+2. **OS de la borne** : Linux ou Windows IoT ?
+   - *Décision attendue* : Contraintes hardware, maintenance, coûts
+   - *Impact* : Déploiement et support
+
+3. **Gestion des sauvegardes** : Limite de 5 sauvegardes suffisante ?
+   - *Décision attendue* : Retour utilisateurs
+   - *Impact* : Expérience utilisateur
+
+### Produit
+
+6. **Frais de plateforme** : 2% du prize pool est-il acceptable ?
+   - *Décision attendue* : Modèle économique, compétitivité
+   - *Impact* : Viabilité économique
+
+7. **Limite participants tournoi** : 20 pour locaux, illimité pour on-chain ?
+   - *Décision attendue* : Cas d'usage réels
+   - *Impact* : Scalabilité
+
+8. **Customisation** : Gratuite ou certains thèmes payants ?
+   - *Décision attendue* : Stratégie monétisation
+   - *Impact* : Revenus additionnels
+
+### Sécurité
+
+9. **Audit smart contracts** : Audit externe obligatoire ou interne suffisant pour MVP ?
+   - *Décision attendue* : Budget, timeline, niveau de risque acceptable
+   - *Impact* : Sécurité et confiance utilisateurs
+
+10. **Mode maintenance** : Accès admin local ou à distance ?
+    - *Décision attendue* : Sécurité vs praticité
+    - *Impact* : Support et maintenance
+
+### Légaux / Compliance
+
+11. **Réglementation** : Jeux d'argent ou compétition de skill ?
+    - *Décision attendue* : Consultation légale
+    - *Impact* : Déploiement géographique
+
+12. **Données personnelles** : RGPD applicable (adresses wallet = données personnelles) ?
+    - *Décision attendue* : Consultation légale
+    - *Impact* : Conformité et architecture données
 
 ---
