@@ -1,0 +1,41 @@
+@startuml
+
+package "Borne" {
+  component "Boutons" as BTN
+  component "ESP32" as ESP
+  component "Three.js" as THREE
+  component "React UI" as REACT
+}
+
+package "Backend Node.js" {
+  component "API REST" as API
+  component "WebSocket" as WS
+  component "Game Engine" as GE
+}
+
+package "Base de données" {
+  database "PostgreSQL" as PG
+  database "Redis" as REDIS
+}
+
+package "Blockchain Solana" {
+  component "Smart Contract" as SC
+  component "Leaderboard" as LB
+}
+
+package "Mobile" {
+  component "Wallet (Phantom)" as WALLET
+}
+
+BTN --> ESP
+ESP --> REACT : MQTT
+REACT --> API : HTTP
+REACT --> WS : WebSocket
+API --> GE
+GE --> PG
+GE --> REDIS
+GE --> SC
+SC --> LB
+WALLET --> REACT : QR scan
+
+@enduml

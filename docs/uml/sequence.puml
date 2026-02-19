@@ -1,0 +1,34 @@
+@startuml
+
+actor Joueur
+participant "Borne UI" as UI
+participant "Backend" as API
+participant "Solana" as SOL
+participant "Smart Contract" as SC
+
+Joueur -> UI : Sélectionne "Jouer en classé"
+UI --> Joueur : Affiche QR Code
+Joueur -> SOL : Signe le challenge
+SOL --> Joueur : Signature
+Joueur -> API : POST /auth/wallet
+API -> SOL : Vérifie signature
+SOL --> API : OK
+API --> UI : JWT session
+UI --> Joueur : Wallet connecté
+
+Joueur -> UI : Lance la partie
+UI -> API : POST /game/start
+API --> UI : gameId
+
+loop Tant que billes > 0
+  Joueur -> UI : Contrôle raquettes
+  UI -> API : WS: flipper_event
+  API --> UI : WS: game_state
+end
+
+API -> SC : recordScore()
+SC --> API : txHash
+API --> UI : Score final + rang
+UI --> Joueur : Écran de fin
+
+@enduml

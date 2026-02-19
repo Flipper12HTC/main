@@ -1,0 +1,54 @@
+@startuml
+
+class Game {
+  - status: String
+  - mode: String
+  - ballsLeft: int
+  + start()
+  + end()
+}
+
+class Player {
+  - walletAddress: String
+  + isGuest(): Boolean
+}
+
+class Ball {
+  - posX: float
+  - posY: float
+  + applyForce()
+}
+
+class Flipper {
+  - side: String
+  - isActive: Boolean
+  + activate()
+  + deactivate()
+}
+
+class Target {
+  - type: String
+  - points: int
+  + hit()
+}
+
+class Tournament {
+  - entryFee: float
+  - cashprize: float
+  + join()
+  + distributePrizes()
+}
+
+class Wallet {
+  - address: String
+  + sign()
+}
+
+Game "1" --> "1..*" Player
+Game "1" --> "1" Ball
+Game "1" --> "2" Flipper
+Game "1" --> "0..*" Target
+Player "1" --> "0..1" Wallet
+Player "0..*" --> "0..*" Tournament
+
+@enduml
