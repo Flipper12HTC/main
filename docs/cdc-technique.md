@@ -1274,3 +1274,10 @@ BORNE FLIPPER 12
     - *Impact* : Conformité et architecture données
 
 ---
+Objectif final
+Créer un prototype jouable de flipper connecté combinant :
+rendu 3D web
+contrôles physiques ESP32
+synchronisation temps réel 
+Blockchain Solana 
+Play2earn 
