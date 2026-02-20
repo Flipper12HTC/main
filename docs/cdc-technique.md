@@ -1061,14 +1061,14 @@ BORNE FLIPPER 12
   ─ Audio (Effets sonores)                          
 
  MODULE BLOCKCHAIN                           
- ─ RPC Solana (web3.js / @solana/web3.js)   
- ─ Smart contracts (Anchor)                         
+ ─ RPC Solana (Bibliothèque blockchain)   
+ ─ Smart contracts                         
  ─ Gestion transactions  
                             
 
  BASE DE DONNÉES LOCALE                       
- ─ Scores locaux (PostgreSQL) 
- ─ Sauvegardes parties (JSON)                      
+ ─ Scores locaux (Base de données relationnelle) 
+ ─ Sauvegardes parties (Fichiers de sauvegarde)                      
  ─ Configuration borne                              
  ─ Cache leaderboard                               
 
@@ -1091,12 +1091,12 @@ BORNE FLIPPER 12
 
 - **Internet → Blockchain** : HTTPS via RPC Solana (endpoints publics ou dédiés)
 - **Borne → Wallet mobile** : QR code (WebSocket)
-- **Stockage local** : PostgreSQL pour données structurées, fichiers JSON pour sauvegardes
+- **Stockage local** : Base de données relationnelle pour données structurées, fichiers de sauvegarde pour les parties
 - **Hardware** : USB pour écran tactile
 
 ### Système d'exploitation
 
-- **OS recommandé** : Linux (Ubuntu LTS) ou Windows IoT
+- **OS recommandé** : Système d'exploitation embarqué adapté
 - **Gestion des processus** : Service système pour auto-démarrage
 - **Mise à jour** : OTA (Over-The-Air) pour mises à jour logicielles
 
@@ -1108,19 +1108,19 @@ BORNE FLIPPER 12
 |-----------|-------------|---------------|----------------------|
 | **Moteur de jeu** | Three.js|
 | **Blockchain** | Solana | Frais de transaction très faibles (~0.00025 SOL)|
-| **Smart contracts** | Anchor (Rust) | Framework standard Solana, sécurité, développement rapide |
-| **Backend RPC** | Node.js + @solana/web3.js | API RPC native, gestion asynchrone, écosystème riche | 
-| **Stockage local** | PostgreSQL |
-| **Sauvegardes** | JSON files | Format simple, lisible, facile à déboguer |
-| **OS** | Linux (Ubuntu LTS) | Stable, open-source, support long terme | Windows IoT (licence)|
-| **Langage principal** | JavaScript |
-| **Gestion de version** | Git + GitHub | Standard industrie, collaboration, CI/CD |
+| **Smart contracts** | Framework de développement blockchain | Framework standard, sécurité, développement rapide |
+| **Backend RPC** | Runtime applicatif + Bibliothèque blockchain | API RPC native, gestion asynchrone, écosystème riche | 
+| **Stockage local** | Base de données relationnelle |
+| **Sauvegardes** | Fichiers de sauvegarde | Format simple, lisible, facile à déboguer |
+| **OS** | Système d'exploitation embarqué | Stable, open-source, support long terme |
+| **Langage principal** | Javascript |
+| **Gestion de version** | Système de contrôle de version | Standard industrie, collaboration, CI/CD |
 
 ### Dépendances principales
 
-- **Solana Web3.js** : Version 1.87+
-- **Anchor** : Version 0.29+
-- **SQLite** : Version 3.40+
+- **Bibliothèque blockchain** : Version récente
+- **Framework smart contracts** : Version récente
+- **Base de données** : Version récente
 
 ---
 
@@ -1161,15 +1161,6 @@ BORNE FLIPPER 12
 - **Anti-replay** : Timestamp + nonce unique pour chaque transaction
 - **Plafonds** : Score maximum théorique calculé selon durée de partie et règles
 
-### Anti-manipulation physique
-
-- **Système anti-tilt** : 
-  - Capteurs accéléromètre détectant secousses excessives
-  - Pénalité automatique : -500 points + perte de bille immédiate
-  - Détection après 3 secousses rapides consécutives
-- **Validation des capteurs** : Auto-test au démarrage, détection de capteurs défaillants
-- **Logs hardware** : Enregistrement de tous les événements capteurs pour audit
-
 ### Gestion des erreurs RPC
 
 - **Retry automatique** : 3 tentatives avec backoff exponentiel (1s, 2s, 4s)
@@ -1189,15 +1180,7 @@ BORNE FLIPPER 12
 
 ## Conventions équipe
 
-### Nommage
-
-- **Variables** : camelCase (`playerAddress`, `currentScore`)
-- **Constantes** : UPPER_SNAKE_CASE (`MAX_BALLS`, `DEFAULT_ENTRY_FEE`)
-- **Classes** : PascalCase (`GameSession`, `TournamentManager`)
-- **Fichiers** : PascalCase pour classes (`Player.cs`), kebab-case pour configs (`game-config.json`)
-- **Smart contracts** : snake_case (`tournament_manager.rs`)
-
-### Git
+### Contrôle de version
 
 - **Branches** : `feature/`, `fix/`, `hotfix/`, `refactor/`
 - **Commits** : Format conventionnel
@@ -1205,19 +1188,19 @@ BORNE FLIPPER 12
   - `fix: correction calcul score on-chain`
   - `docs: mise à jour CDC`
   - `refactor: optimisation requêtes RPC`
-- **Pull requests** : Description détaillée, review obligatoire avant merge
+- **Fusion de code** : Description détaillée, review obligatoire avant merge
 
 ### Code
 
 - **Commentaires** : En Anglais pour la logique métier, en anglais pour les APIs externes
-- **Documentation** : JSDoc/XML comments pour toutes les fonctions publiques
+- **Documentation** : Documentation standard pour toutes les fonctions publiques
 - **Tests** :
-- **Linting** : ESLint pour JS/TS, StyleCop pour C#
+- **Linting** : Outils de linting adaptés au langage utilisé
 
 ### Déploiement
 
 - **Environnements** : dev → testnet → mainnet
-- **CI/CD** : Tests automatiques sur chaque PR, déploiement testnet automatique
+- **CI/CD** : Tests automatiques sur chaque fusion, déploiement testnet automatique
 - **Rollback** : Plan de rollback documenté pour chaque déploiement
 
 
@@ -1231,7 +1214,7 @@ BORNE FLIPPER 12
    - *Décision attendue* : Évaluer performance et complexité physique requise
    - *Impact* : Architecture technique et stack
 
-2. **OS de la borne** : Linux ou Windows IoT ?
+2. **OS de la borne** : Quel système d'exploitation embarqué ?
    - *Décision attendue* : Contraintes hardware, maintenance, coûts
    - *Impact* : Déploiement et support
 
