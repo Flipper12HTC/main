@@ -4,8 +4,6 @@
 
 ### Capteurs
 - **Boutons L/R** : le joueur appuie pour activer les raquettes, signal GPIO envoyé à l'ESP32
-- **Accéléromètre (MPU-6050)** : détecte si quelqu'un secoue physiquement la borne (anti-tilt). Si le seuil est dépassé → bille perdue + pénalité de -500 points
-- **Capteur bille (infrarouge)** : détecte quand la balle sort du plateau → bille perdue
 
 ### ESP32
 Reçoit les signaux bruts des capteurs, filtre les rebonds et transmet les événements au Game Engine via MQTT.

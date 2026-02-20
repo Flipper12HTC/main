@@ -1,41 +1,72 @@
 @startuml
 
-package "Borne" {
-  component "Boutons" as BTN
-  component "ESP32" as ESP
-  component "Three.js" as THREE
-  component "React UI" as REACT
+package "Hardware" {
+  component [Boutons L/R] as BTN
+  component [ESP32] as ESP
 }
 
-package "Backend Node.js" {
-  component "API REST" as API
-  component "WebSocket" as WS
-  component "Game Engine" as GE
+package "Game Engine (Node.js)" {
+  component [Game Loop] as GL
+  component [Cannon.js (physique)] as PHY
+  component [Score Manager] as SM
+  component [API REST] as API
+  component [WebSocket] as WS
 }
 
-package "Base de données" {
-  database "PostgreSQL" as PG
-  database "Redis" as REDIS
+package "UI (Three.js)" {
+  component [Écran Principal] as E1
+  component [Écran Score] as E2
+  component [Écran Déco] as E3
+}
+
+package "Stockage" {
+  database [PostgreSQL] as PG
+  database [Redis] as REDIS
 }
 
 package "Blockchain Solana" {
-  component "Smart Contract" as SC
-  component "Leaderboard" as LB
+  component [Smart Contract] as SC
+  component [Leaderboard] as LB
 }
 
 package "Mobile" {
-  component "Wallet (Phantom)" as WALLET
+  component [Wallet Phantom] as WALLET
 }
 
-BTN --> ESP
-ESP --> REACT : MQTT
-REACT --> API : HTTP
-REACT --> WS : WebSocket
-API --> GE
-GE --> PG
-GE --> REDIS
-GE --> SC
-SC --> LB
-WALLET --> REACT : QR scan
+BTN --> ESP : GPIO
+ESP --> GL : MQTT / JSON <5ms
+
+GL --> PHY : tick 16ms
+GL --> SM : points
+GL --> WS : state
+
+WS --> E1 : WebSocket 60Hz
+WS --> E2 : WebSocket 1Hz
+WS --> E3 : WebSocket on event
+
+SM --> PG : fin de partie
+SM --> REDIS : cache live
+SM --> SC : fin de partie (si wallet)
+SC --> LB : mise à jour
+
+WALLET --> API : QR scan / auth
+
+note right of ESP
+  Décision 1 : MQTT
+  Natif ESP32, léger,
+  asynchrone, <5ms
+end note
+
+note right of PHY
+  Décision 2 : Cannon.js
+  Natif Three.js,
+  même thread JS
+end note
+
+note right of SC
+  Décision 3 : Solana
+  Frais ~0.04€,
+  finalité < 1s
+end note
 
 @enduml
